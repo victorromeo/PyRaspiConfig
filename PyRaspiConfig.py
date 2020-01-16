@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import subprocess
 import shlex
-from typing import List
+from crypt import crypt
+from getpass import getpass
+from typing import List, Tuple
 
 class PyRaspiConfig:
     """PyRaspiConfig"""
@@ -18,62 +20,331 @@ class PyRaspiConfig:
         return process.stdout.decode("utf-8"), process.stderr.decode("utf-8")
 
     @classmethod
-    def GetCanExpand(self) -> bool:
+    def GetCanExpand(self) -> Tuple[bool,str]:
         """Gets a flag indicating if the filesystem takes up the entire disk"""
         out,err = self._ExecuteCmd('get_can_expand')
+
+        return bool(int(out)), err
+
+
+    @classmethod
+    def ExpandRootFS(self) -> Tuple[str, str]:
+        """Make the filesystem take up the entire disk"""
+        out,err = self._ExecuteCmd('do_expand_rootfs')
 
         return out, err
 
     @classmethod
-    def GetHostname(self) -> str:
+    def GetHostname(self) -> Tuple[str,str]:
+        """Get the hostname"""
         out,err = self._ExecuteCmd('get_hostname')
 
         return out, err
 
-#define GET_CAN_EXPAND  "sudo raspi-config nonint get_can_expand"
-#define EXPAND_FS       "sudo raspi-config nonint do_expand_rootfs"
-#define GET_HOSTNAME    "sudo raspi-config nonint get_hostname"
-#define SET_HOSTNAME    "sudo raspi-config nonint do_hostname %s"
-#define GET_BOOT_CLI    "sudo raspi-config nonint get_boot_cli"
-#define GET_AUTOLOGIN   "sudo raspi-config nonint get_autologin"
-#define SET_BOOT_CLI    "sudo raspi-config nonint do_boot_behaviour B1"
-#define SET_BOOT_CLIA   "sudo raspi-config nonint do_boot_behaviour B2"
-#define SET_BOOT_GUI    "sudo raspi-config nonint do_boot_behaviour B3"
-#define SET_BOOT_GUIA   "sudo raspi-config nonint do_boot_behaviour B4"
-#define GET_BOOT_WAIT   "sudo raspi-config nonint get_boot_wait"
-#define SET_BOOT_WAIT   "sudo raspi-config nonint do_boot_wait %d"
-#define GET_SPLASH      "sudo raspi-config nonint get_boot_splash"
-#define SET_SPLASH      "sudo raspi-config nonint do_boot_splash %d"
-#define GET_OVERSCAN    "sudo raspi-config nonint get_overscan"
-#define SET_OVERSCAN    "sudo raspi-config nonint do_overscan %d"
-#define GET_CAMERA      "sudo raspi-config nonint get_camera"
-#define SET_CAMERA      "sudo raspi-config nonint do_camera %d"
-#define GET_SSH         "sudo raspi-config nonint get_ssh"
-#define SET_SSH         "sudo raspi-config nonint do_ssh %d"
-#define GET_VNC         "sudo raspi-config nonint get_vnc"
-#define SET_VNC         "sudo raspi-config nonint do_vnc %d"
-#define GET_SPI         "sudo raspi-config nonint get_spi"
-#define SET_SPI         "sudo raspi-config nonint do_spi %d"
-#define GET_I2C         "sudo raspi-config nonint get_i2c"
-#define SET_I2C         "sudo raspi-config nonint do_i2c %d"
-#define GET_SERIAL      "sudo raspi-config nonint get_serial"
-#define GET_SERIALHW    "sudo raspi-config nonint get_serial_hw"
-#define SET_SERIAL      "sudo raspi-config nonint do_serial %d"
-#define GET_1WIRE       "sudo raspi-config nonint get_onewire"
-#define SET_1WIRE       "sudo raspi-config nonint do_onewire %d"
-#define GET_RGPIO       "sudo raspi-config nonint get_rgpio"
-#define SET_RGPIO       "sudo raspi-config nonint do_rgpio %d"
-#define GET_PI_TYPE     "sudo raspi-config nonint get_pi_type"
-#define GET_OVERCLOCK   "sudo raspi-config nonint get_config_var arm_freq /boot/config.txt"
-#define SET_OVERCLOCK   "sudo raspi-config nonint do_overclock %s"
-#define GET_GPU_MEM     "sudo raspi-config nonint get_config_var gpu_mem /boot/config.txt"
-#define GET_GPU_MEM_256 "sudo raspi-config nonint get_config_var gpu_mem_256 /boot/config.txt"
-#define GET_GPU_MEM_512 "sudo raspi-config nonint get_config_var gpu_mem_512 /boot/config.txt"
-#define GET_GPU_MEM_1K  "sudo raspi-config nonint get_config_var gpu_mem_1024 /boot/config.txt"
-#define SET_GPU_MEM     "sudo raspi-config nonint do_memory_split %d"
-#define GET_HDMI_GROUP  "sudo raspi-config nonint get_config_var hdmi_group /boot/config.txt"
-#define GET_HDMI_MODE   "sudo raspi-config nonint get_config_var hdmi_mode /boot/config.txt"
-#define SET_HDMI_GP_MOD "sudo raspi-config nonint do_resolution %d %d"
-#define GET_WIFI_CTRY   "sudo raspi-config nonint get_wifi_country"
-#define SET_WIFI_CTRY   "sudo raspi-config nonint do_wifi_country %s"
-#define CHANGE_PASSWD   "(echo \"%s\" ; echo \"%s\" ; echo \"%s\") | passwd"
+    @classmethod
+    def SetHostname(self, hostname) -> Tuple[str,str]:
+        """Sets the hostname"""
+        out,err = self._ExecuteCmd('do_hostname {0}'.format(hostname))
+
+        return out, err
+
+    @classmethod
+    def GetBootCLI(self) -> Tuple[bool,str]:
+        out,err = self._ExecuteCmd('get_boot_cli')
+
+        return bool(int(out)), err
+
+    @classmethod
+    def GetAutoLogin(self) -> Tuple[bool,str]:
+        out,err = self._ExecuteCmd('get_autologin')
+
+        return bool(int(out)), err
+
+    @classmethod
+    def SetBootCLI(self) -> Tuple[str,str]:
+        """Make the host boot to the command prompt"""
+        out,err = self._ExecuteCmd('do_boot_behaviour B1')
+
+        return out, err
+
+    @classmethod
+    def SetBootCLIA(self) -> Tuple[str,str]:
+        """Make the host boot to the command prompt with AutoLogin as 'pi'"""
+        out,err = self._ExecuteCmd('do_boot_behaviour B2')
+
+        return out, err
+
+    @classmethod
+    def SetBootGUI(self) -> Tuple[str,str]:
+        """Make the host boot to the GUI"""
+        out,err = self._ExecuteCmd('do_boot_behaviour B3')
+
+        return out, err
+
+    @classmethod
+    def SetBootGUIA(self) -> Tuple[str,str]:
+        """Make the host boot to the GUI with AutoLogin as 'pi'"""
+        out,err = self._ExecuteCmd('do_boot_behaviour B4')
+
+        return out, err
+
+    @classmethod
+    def GetBootWait(self) -> Tuple[bool,str]:
+        """Get the boot wait for network"""
+        out,err = self._ExecuteCmd('get_boot_wait')
+
+        return bool(int(out)), err
+
+    @classmethod
+    def SetBootWait(self, enable:bool):
+        """Set the boot wait for network"""
+        out,err = self._ExecuteCmd('set_boot_wait {0}'.format(int(enable)))
+
+        return out, err
+
+    @classmethod
+    def GetBootSplash(self) -> Tuple[bool,str]:
+        """Get the boot splash enable state"""
+        out,err = self._ExecuteCmd('get_boot_splash')
+
+        return bool(int(out)), err
+
+    @classmethod
+    def SetBootSplash(self, enable: bool) -> Tuple[bool,str]:
+        """Set the boot splash enable state"""
+        out,err = self._ExecuteCmd('do_boot_splash {0}'.format(int(enable)))
+
+        return out, err
+
+    @classmethod
+    def GetOverscan(self) -> Tuple[bool,str]:
+        """Get the Screen overscan mode"""
+        out,err = self._ExecuteCmd('get_overscan')
+
+        return bool(int(out)), err
+
+    @classmethod
+    def SetOverscan(self, enable: bool) -> Tuple[bool,str]:
+        """Set the Screen overscan to remove black bars"""
+        out,err = self._ExecuteCmd('do_overscan {0}'.format(int(enable)))
+
+        return out, err
+
+    @classmethod
+    def GetCamera(self) -> Tuple[bool,str]:
+        """Get the Camera enable state"""
+        out,err = self._ExecuteCmd('get_camera')
+
+        return bool(int(out)), err
+
+    @classmethod
+    def SetCamera(self, enable: bool) -> Tuple[bool,str]:
+        """Set the Camera enable state"""
+        out,err = self._ExecuteCmd('do_camera {0}'.format(int(enable)))
+
+        return out, err
+
+    @classmethod
+    def GetSSH(self) -> Tuple[bool,str]:
+        """Get the SSH enable state"""
+        out,err = self._ExecuteCmd('get_camera')
+
+        return bool(int(out)), err
+
+    @classmethod
+    def SetSSH(self, enable: bool) -> Tuple[bool,str]:
+        """Set the SSH enable state"""
+        out,err = self._ExecuteCmd('do_camera {0}'.format(int(enable)))
+
+        return out, err
+
+    @classmethod
+    def GetVNC(self) -> Tuple[bool,str]:
+        """Get the VNC Server enable state"""
+        out,err = self._ExecuteCmd('get_vnc')
+
+        return bool(int(out)), err
+
+    @classmethod
+    def SetVNC(self, enable: bool) -> Tuple[bool,str]:
+        """Set the VNC Server enable state"""
+        out,err = self._ExecuteCmd('do_vnc {0}'.format(int(enable)))
+
+        return out, err
+
+    @classmethod
+    def GetSPI(self) -> Tuple[bool,str]:
+        """Get the SPI enable state"""
+        out,err = self._ExecuteCmd('get_spi')
+
+        return bool(int(out)), err
+
+    @classmethod
+    def SetSPI(self, enable: bool) -> Tuple[bool,str]:
+        """Set the SPI enable state"""
+        out,err = self._ExecuteCmd('do_spi {0}'.format(int(enable)))
+
+        return out, err
+
+    @classmethod
+    def GetI2C(self) -> Tuple[bool,str]:
+        """Get the I2C enable state"""
+        out,err = self._ExecuteCmd('get_i2c')
+
+        return bool(int(out)), err
+
+    @classmethod
+    def SetI2C(self, enable: bool) -> Tuple[bool,str]:
+        """Set the I2C enable state"""
+        out,err = self._ExecuteCmd('do_i2c {0}'.format(int(enable)))
+
+        return out, err
+
+    @classmethod
+    def GetSerial(self) -> Tuple[bool,str]:
+        """Get the Login shell over serial enable state"""
+        out,err = self._ExecuteCmd('get_serial')
+
+        return bool(int(out)), err
+
+    @classmethod
+    def GetSerialHW(self) -> Tuple[bool,str]:
+        """Get Serial Hardware Port enable state"""
+        out,err = self._ExecuteCmd('get_serial_hw')
+
+        return bool(int(out)), err
+
+    @classmethod
+    def SetSerial(self, enable: bool) -> Tuple[bool,str]:
+        """Set the Login shell over serial enable state"""
+        out,err = self._ExecuteCmd('do_serial {0}'.format(int(enable)))
+
+        return out, err
+
+    @classmethod
+    def GetoneWire(self) -> Tuple[bool,str]:
+        """Get the One Wire enable state"""
+        out,err = self._ExecuteCmd('get_onewire')
+
+        return bool(int(out)), err
+
+    @classmethod
+    def SetOneWire(self, enable: bool) -> Tuple[bool,str]:
+        """Set the One Wire enable state"""
+        out,err = self._ExecuteCmd('do_onewire {0}'.format(int(enable)))
+
+        return out, err
+
+    @classmethod
+    def GetRemoteGPIO(self) -> Tuple[bool,str]:
+        """Get the Remote GPIO enable state"""
+        out,err = self._ExecuteCmd('get_rgpio')
+
+        return bool(int(out)), err
+
+    @classmethod
+    def SetRemoteGPIO(self, enable: bool) -> Tuple[bool,str]:
+        """Set the Remote GPIO enable state"""
+        out,err = self._ExecuteCmd('do_rgpio {0}'.format(int(enable)))
+
+        return out, err
+
+    @classmethod
+    def GetPIType(self) -> Tuple[bool,str]:
+        """Get the PI Type"""
+        out,err = self._ExecuteCmd('get_pi_type')
+
+        return bool(int(out)), err
+
+    @classmethod
+    def GetOverclock(self) -> Tuple[bool,str]:
+        """Get the Overclock enable state"""
+        out,err = self._ExecuteCmd('get_config_var arm_freq /boot/config.txt')
+
+        return bool(int(out)), err
+
+    @classmethod
+    def SetOverclock(self, overclock: str) -> Tuple[bool,str]:
+        """Set the Overclock enable state"""
+        out,err = self._ExecuteCmd('do_overclock {0}'.format(overclock))
+
+        return out, err
+
+    @classmethod
+    def GetGPUMemory(self) -> Tuple[int,str]:
+        """Get the GPU Memory"""
+        out,err = self._ExecuteCmd('get_config_var gpu_mem /boot/config.txt')
+
+        return int(out), err
+
+    @classmethod
+    def GetGPUMemory256(self) -> Tuple[int,str]:
+        """Get the GPU Memory"""
+        out,err = self._ExecuteCmd('get_config_var gpu_mem_256 /boot/config.txt')
+
+        return int(out), err
+
+    @classmethod
+    def GetGPUMemory512(self) -> Tuple[int,str]:
+        """Get the GPU Memory"""
+        out,err = self._ExecuteCmd('get_config_var gpu_mem_512 /boot/config.txt')
+
+        return int(out), err
+
+    @classmethod
+    def GetGPUMemory1024(self) -> Tuple[int,str]:
+        """Get the GPU Memory"""
+        out,err = self._ExecuteCmd('get_config_var gpu_mem_1024 /boot/config.txt')
+
+        return int(out), err
+
+    @classmethod
+    def SetGPUMemory(self, memory:int) -> Tuple[str,str]:
+        """Set the GPU Memory"""
+        out,err = self._ExecuteCmd('do_memory_split {0}'.format(memory))
+
+        return out, err
+
+    @classmethod
+    def GetHDMIGroup(self) -> Tuple[int,str]:
+        """Get the HDMI Group"""
+        out,err = self._ExecuteCmd('get_config_var hdmi_group /boot/config.txt')
+
+        return int(out), err
+
+    @classmethod
+    def GetHDMIMode(self) -> Tuple[int,str]:
+        """Get the HDMI Mode"""
+        out,err = self._ExecuteCmd('get_config_var hdmi_mode /boot/config.txt')
+
+        return int(out), err
+
+    @classmethod
+    def SetHDMIGroupMode(self, group: int, mode: int) -> Tuple[str,str]:
+        """Set the HDMI Group and Mode"""
+        out,err = self._ExecuteCmd('do_resolution {0} {1}'.format(group, mode))
+
+        return out, err
+
+    @classmethod
+    def GetWiFiCountry(self) -> Tuple[str,str]:
+        """Get the WiFi country code"""
+        out,err = self._ExecuteCmd('get_wifi_country')
+
+        return out, err
+
+    @classmethod
+    def SetWiFiCountry(self, country_code: str) -> Tuple[bool,str]:
+        """Set the  enable state"""
+        out,err = self._ExecuteCmd('do_wifi_country {0}'.format(country_code))
+
+        return out, err
+
+    @classmethod
+    def SetPassword(self,username:str, password:str):
+        """Set the password (Not Secure)"""
+        process = subprocess.Popen(['/usr/bin/sudo', '/usr/sbin/chpasswd' ], universal_newlines=True, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        (stdout, stderr) = process.communicate(username + ":" + password + "\n")
+        assert process.wait() == 0
+        if stdout or stderr:
+            raise Exception("Error encountered changing the password!")
