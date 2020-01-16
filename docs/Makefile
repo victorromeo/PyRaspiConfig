@@ -5,6 +5,7 @@
 # from the environment for the first two.
 SPHINXOPTS    ?=
 SPHINXBUILD   ?= sphinx-build
+SPHINXDOC     ?= sphinx-apidoc
 SOURCEDIR     = source
 BUILDDIR      = build
 
@@ -38,6 +39,9 @@ help:
 	@echo "  changes    to make an overview of all changed/added/deprecated items"
 	@echo "  linkcheck  to check all external links for integrity"
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
+
+generate:
+	$(SPHINXDOC) -o $(SOURCEDIR) ..
 
 clean:
 	-rm -rf $(BUILDDIR)/*
